@@ -1,0 +1,7 @@
+{
+  "name": "ci-cd-test",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "echo \"Test Passed\" && exit 0"
+  }
+}
