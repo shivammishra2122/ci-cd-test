@@ -24,7 +24,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - run: gh pr merge --auto --merge
+      - uses: actions/checkout@v3   # 🔥 FIX HERE
+      - name: Enable auto merge
+        run: gh pr merge --auto --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -32,4 +34,5 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - run: echo "🚀 Deployed successfully"
