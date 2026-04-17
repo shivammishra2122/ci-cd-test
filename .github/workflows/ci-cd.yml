@@ -3,6 +3,8 @@ name: Simple CI/CD
 on:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened]
+
   push:
     branches: [main]
 
@@ -11,28 +13,47 @@ permissions:
   pull-requests: write
 
 jobs:
+
+  # 🔹 1. Run tests on PR
   test:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: npm install
-      - run: npm test
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+
+  # 🔹 2. Auto-merge PR after tests pass
   automerge:
     if: github.event_name == 'pull_request'
     needs: test
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3   # 🔥 FIX HERE
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Enable auto merge
-        run: gh pr merge --auto --merge
+        run: gh pr merge ${{ github.event.pull_request.number }} --auto --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+
+  # 🔹 3. Deploy after merge to main
   deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - run: echo "🚀 Deployed successfully"
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy step
+        run: echo "🚀 Deployed successfully"
