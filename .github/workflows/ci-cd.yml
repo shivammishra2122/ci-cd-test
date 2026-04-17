@@ -1,4 +1,4 @@
-name: Simple CI/CD
+name: CI/CD with Auto-merge & Email Notifications
 
 on:
   pull_request:
@@ -11,35 +11,155 @@ permissions:
   pull-requests: write
 
 jobs:
+  # ─────────────────────────────────────────
+  # JOB 1: Run all checks on PR
+  # ─────────────────────────────────────────
   test:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
         run: npm test
 
+      - name: Run build
+        run: npm run build
+
+  # ─────────────────────────────────────────
+  # JOB 2: Auto-merge if all checks passed
+  # ─────────────────────────────────────────
   automerge:
     if: github.event_name == 'pull_request'
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Enable auto merge
         run: gh pr merge ${{ github.event.pull_request.number }} --auto --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # ─────────────────────────────────────────
+  # JOB 3: Email on SUCCESS
+  # ─────────────────────────────────────────
+  notify-success:
+    if: |
+      github.event_name == 'pull_request' &&
+      needs.automerge.result == 'success'
+    needs: [test, automerge]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send success email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: CI/CD Bot <${{ secrets.MAIL_USERNAME }}>
+          subject: "✅ PR Merged: ${{ github.event.pull_request.title }}"
+          body: |
+            Hi ${{ github.event.pull_request.user.login }},
+
+            Your pull request has been successfully merged into main! 🎉
+
+            ──────────────────────────────
+            📌 PR Title  : ${{ github.event.pull_request.title }}
+            🔗 PR Link   : ${{ github.event.pull_request.html_url }}
+            📁 Repo      : ${{ github.repository }}
+            🌿 Branch    : ${{ github.head_ref }} → main
+            👤 Author    : ${{ github.event.pull_request.user.login }}
+            ──────────────────────────────
+
+            All checks passed:
+              ✅ Lint
+              ✅ Unit Tests
+              ✅ Build
+
+            Regards,
+            CI/CD Bot
+
+  # ─────────────────────────────────────────
+  # JOB 4: Email on FAILURE
+  # ─────────────────────────────────────────
+  notify-failure:
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      (needs.test.result == 'failure' || needs.automerge.result == 'failure')
+    needs: [test, automerge]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build failure reason
+        id: reason
+        run: |
+          ISSUES=""
+          if [ "${{ needs.test.result }}" == "failure" ]; then
+            ISSUES="$ISSUES- Lint / Unit Tests / Build failed\n"
+          fi
+          if [ "${{ needs.automerge.result }}" == "failure" ]; then
+            ISSUES="$ISSUES- Auto-merge failed (possible conflicts or branch protection rules)\n"
+          fi
+          echo "issues=$ISSUES" >> $GITHUB_OUTPUT
+
+      - name: Send failure email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: CI/CD Bot <${{ secrets.MAIL_USERNAME }}>
+          subject: "❌ PR Failed to Merge: ${{ github.event.pull_request.title }}"
+          body: |
+            Hi ${{ github.event.pull_request.user.login }},
+
+            Unfortunately, your pull request could not be merged. ❌
+
+            ──────────────────────────────
+            📌 PR Title  : ${{ github.event.pull_request.title }}
+            🔗 PR Link   : ${{ github.event.pull_request.html_url }}
+            📁 Repo      : ${{ github.repository }}
+            🌿 Branch    : ${{ github.head_ref }} → main
+            👤 Author    : ${{ github.event.pull_request.user.login }}
+            ──────────────────────────────
+
+            Issues found:
+            ${{ steps.reason.outputs.issues }}
+
+            🔍 Full logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Please fix the issues and push again.
+
+            Regards,
+            CI/CD Bot
+
+  # ─────────────────────────────────────────
+  # JOB 5: Deploy after merge to main
+  # ─────────────────────────────────────────
   deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Deploy
         run: echo "🚀 Deployed successfully"
