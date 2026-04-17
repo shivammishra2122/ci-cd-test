@@ -39,7 +39,28 @@ jobs:
         run: npm run build
 
   # ─────────────────────────────────────────
-  # JOB 2: Auto-merge if all checks passed
+  # JOB 2: Grab committer email
+  # ─────────────────────────────────────────
+  get-committer:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      email: ${{ steps.get-email.outputs.email }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Get committer email from git log
+        id: get-email
+        run: |
+          EMAIL=$(git log -1 --pretty=format:'%ae')
+          echo "Committer email: $EMAIL"
+          echo "email=$EMAIL" >> $GITHUB_OUTPUT
+
+  # ─────────────────────────────────────────
+  # JOB 3: Auto-merge if all checks passed
   # ─────────────────────────────────────────
   automerge:
     if: github.event_name == 'pull_request'
@@ -55,23 +76,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ─────────────────────────────────────────
-  # JOB 3: Email on SUCCESS
+  # JOB 4: Email on SUCCESS
   # ─────────────────────────────────────────
   notify-success:
     if: |
       github.event_name == 'pull_request' &&
       needs.automerge.result == 'success'
-    needs: [test, automerge]
+    needs: [test, automerge, get-committer]
     runs-on: ubuntu-latest
     steps:
-      - name: Send success email
+      - name: Send success email to committer
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          to: ${{ secrets.NOTIFY_EMAIL }}
+          to: ${{ needs.get-committer.outputs.email }}
           from: CI/CD Bot <${{ secrets.MAIL_USERNAME }}>
           subject: "✅ PR Merged: ${{ github.event.pull_request.title }}"
           body: |
@@ -85,6 +106,7 @@ jobs:
             📁 Repo      : ${{ github.repository }}
             🌿 Branch    : ${{ github.head_ref }} → main
             👤 Author    : ${{ github.event.pull_request.user.login }}
+            📧 Notified  : ${{ needs.get-committer.outputs.email }}
             ──────────────────────────────
 
             All checks passed:
@@ -96,14 +118,14 @@ jobs:
             CI/CD Bot
 
   # ─────────────────────────────────────────
-  # JOB 4: Email on FAILURE
+  # JOB 5: Email on FAILURE
   # ─────────────────────────────────────────
   notify-failure:
     if: |
       always() &&
       github.event_name == 'pull_request' &&
       (needs.test.result == 'failure' || needs.automerge.result == 'failure')
-    needs: [test, automerge]
+    needs: [test, automerge, get-committer]
     runs-on: ubuntu-latest
     steps:
       - name: Build failure reason
@@ -118,14 +140,14 @@ jobs:
           fi
           echo "issues=$ISSUES" >> $GITHUB_OUTPUT
 
-      - name: Send failure email
+      - name: Send failure email to committer
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 465
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          to: ${{ secrets.NOTIFY_EMAIL }}
+          to: ${{ needs.get-committer.outputs.email }}
           from: CI/CD Bot <${{ secrets.MAIL_USERNAME }}>
           subject: "❌ PR Failed to Merge: ${{ github.event.pull_request.title }}"
           body: |
@@ -139,6 +161,7 @@ jobs:
             📁 Repo      : ${{ github.repository }}
             🌿 Branch    : ${{ github.head_ref }} → main
             👤 Author    : ${{ github.event.pull_request.user.login }}
+            📧 Notified  : ${{ needs.get-committer.outputs.email }}
             ──────────────────────────────
 
             Issues found:
@@ -152,7 +175,7 @@ jobs:
             CI/CD Bot
 
   # ─────────────────────────────────────────
-  # JOB 5: Deploy after merge to main
+  # JOB 6: Deploy after merge to main
   # ─────────────────────────────────────────
   deploy:
     if: github.event_name == 'push'
