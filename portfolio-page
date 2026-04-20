@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shivam Mishra — Portfolio</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --border: rgba(0, 0, 0, 0.1);
+      --purple-bg: #EEEDFE;
+      --purple-text: #3C3489;
+      --purple-border: #AFA9EC;
+      --teal-bg: #E1F5EE;
+      --teal-text: #085041;
+      --teal-border: #5DCAA5;
+      --blue-bg: #E6F1FB;
+      --blue-text: #0C447C;
+      --blue-border: #85B7EB;
+      --amber-bg: #FAEEDA;
+      --amber-text: #633806;
+      --amber-border: #EF9F27;
+      --gray-bg: #F1EFE8;
+      --gray-text: #444441;
+      --gray-border: #B4B2A9;
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1a1a;
+        --bg-secondary: #222222;
+        --text: #f0f0f0;
+        --text-muted: #999999;
+        --border: rgba(255, 255, 255, 0.1);
+        --purple-bg: #26215C;
+        --purple-text: #CECBF6;
+        --teal-bg: #04342C;
+        --teal-text: #9FE1CB;
+        --blue-bg: #042C53;
+        --blue-text: #B5D4F4;
+        --amber-bg: #412402;
+        --amber-text: #FAC775;
+        --gray-bg: #2C2C2A;
+        --gray-text: #D3D1C7;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 16px;
+    }
+
+    .container { max-width: 760px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* Hero */
+    .hero {
+      background: var(--bg-secondary);
+      padding: 3.5rem 1.5rem;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .hero-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--purple-bg);
+      color: var(--purple-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .hero h1 { font-size: 24px; font-weight: 500; margin-bottom: 4px; }
+    .hero p { font-size: 15px; color: var(--text-muted); margin-bottom: 12px; }
+
+    /* Sections */
+    section {
+      padding: 2.5rem 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    section:last-child { border-bottom: none; }
+    .section-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      margin: 3px;
+    }
+    .badge-purple { background: var(--purple-bg); color: var(--purple-text); border-color: var(--purple-border); }
+    .badge-teal   { background: var(--teal-bg);   color: var(--teal-text);   border-color: var(--teal-border);   }
+    .badge-blue   { background: var(--blue-bg);   color: var(--blue-text);   border-color: var(--blue-border);   }
+    .badge-amber  { background: var(--amber-bg);  color: var(--amber-text);  border-color: var(--amber-border);  }
+    .badge-gray   { background: var(--gray-bg);   color: var(--gray-text);   border-color: var(--gray-border);   }
+
+    /* Cards */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .card {
+      background: var(--bg);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+    }
+    .card h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .card p  { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 10px; }
+
+    /* Timeline */
+    .timeline { display: flex; flex-direction: column; gap: 1.5rem; }
+    .timeline-item { display: flex; gap: 1rem; align-items: flex-start; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      margin-top: 7px; flex-shrink: 0;
+    }
+    .dot-purple { background: #7F77DD; }
+    .dot-gray   { background: #B4B2A9; }
+    .timeline-item h3 { font-size: 15px; font-weight: 500; }
+    .timeline-item .meta { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .timeline-item .desc { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.6; }
+
+    /* Footer */
+    footer {
+      padding: 2rem 1.5rem;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 0.5px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="avatar">SM</div>
+      <div>
+        <h1>Shivam Mishra</h1>
+        <p>Full Stack Developer · DevOps Enthusiast</p>
+        <div>
+          <span class="badge">GitHub</span>
+          <span class="badge">LinkedIn</span>
+          <span class="badge">shivam@email.com</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div class="container">
+    <section>
+      <p class="section-label">About</p>
+      <p style="max-width: 600px; font-size: 15px;">
+        I build scalable web applications and automate developer workflows with CI/CD pipelines.
+        Passionate about clean code, open source, and shipping fast.
+      </p>
+    </section>
+
+    <!-- Skills -->
+    <section>
+      <p class="section-label">Skills</p>
+      <div>
+        <span class="badge badge-purple">React</span>
+        <span class="badge badge-purple">Vite</span>
+        <span class="badge badge-teal">Node.js</span>
+        <span class="badge badge-teal">Express</span>
+        <span class="badge badge-blue">GitHub Actions</span>
+        <span class="badge badge-blue">Docker</span>
+        <span class="badge badge-amber">JavaScript</span>
+        <span class="badge badge-amber">TypeScript</span>
+        <span class="badge badge-gray">Linux</span>
+        <span class="badge badge-gray">Git</span>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    <section>
+      <p class="section-label">Projects</p>
+      <div class="grid">
+        <div class="card">
+          <h3>CI/CD Pipeline</h3>
+          <p>Auto-merge, preview deploys, and email notifications using GitHub Actions.</p>
+          <span class="badge badge-blue">GitHub Actions</span>
+          <span class="badge badge-purple">YAML</span>
+        </div>
+        <div class="card">
+          <h3>Monorepo Setup</h3>
+          <p>Multi-project repo with per-project preview URLs on GitHub Pages.</p>
+          <span class="badge badge-teal">React</span>
+          <span class="badge badge-teal">Next.js</span>
+        </div>
+        <div class="card">
+          <h3>Portfolio Site</h3>
+          <p>Personal portfolio deployed automatically via CI/CD on every merge.</p>
+          <span class="badge badge-amber">HTML</span>
+          <span class="badge badge-amber">CSS</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Experience -->
+    <section>
+      <p class="section-label">Experience</p>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="dot dot-purple"></div>
+          <div>
+            <h3>Full Stack Developer</h3>
+            <p class="meta">Freelance · 2023 – Present</p>
+            <p class="desc">Building web apps, setting up CI/CD pipelines, and deploying to cloud platforms.</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="dot dot-gray"></div>
+          <div>
+            <h3>Open Source Contributor</h3>
+            <p class="meta">GitHub · 2022 – Present</p>
+            <p class="desc">Contributing to dev tooling, automation scripts, and documentation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    Built and deployed automatically via GitHub Actions CI/CD
+  </footer>
+
+</body>
+</html>
